@@ -22,6 +22,15 @@ def pformat(msg, item):
     sys.stdout.write('\n')
 
 
+def get(url):
+    response = requests.get(url, headers={
+        'User-Agent': 'bitbar-numbers/' + __version__,
+        'Authorization': 'Token ' + TOKEN
+    })
+    response.raise_for_status()
+    return response.json()
+
+
 def main():
     if 'BitBar' not in os.environ:
         logging.basicConfig(level=logging.DEBUG)
@@ -29,26 +38,13 @@ def main():
         sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf8')
 
     print(u'bbn')
+
     print(u'---')
-
-    response = requests.get('{}/countdown'.format(API), headers={
-        'User-Agent': 'bitbar-numbers/' + __version__,
-        'Authorization': 'Token ' + TOKEN
-    })
-    response.raise_for_status()
-    countdowns = response.json()
-
-    response = requests.get('{}/chart'.format(API), headers={
-        'User-Agent': 'simplestats-bitbar/' + __version__,
-        'Authorization': 'Token ' + TOKEN
-    })
-    response.raise_for_status()
-    charts = response.json()
-
-    for item in countdowns['results']:
+    for item in get('{}/countdown'.format(API))['results']:
         pformat('{label} - {created}', item)
+
     print(u'---')
-    for item in charts['results']:
+    for item in get('{}/chart'.format(API))['results']:
         pformat('{label} - {value}', item)
 
     print(u'---')
