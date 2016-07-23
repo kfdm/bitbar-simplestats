@@ -52,6 +52,7 @@ def main():
         pformat('{label} - {value}', item)
 
     print(u'---')
-    print(u'Refresh | refresh=true')
-    print(u'Api | href=' + API)
-    print(u'Issues | href=https://github.com/kfdm/bitbar-numbers/issues')
+    print(u'Dev')
+    print(u'-- Refresh | refresh=true')
+    print(u'-- Api | href=' + API)
+    print(u'-- Issues | href=https://github.com/kfdm/bitbar-numbers/issues')
