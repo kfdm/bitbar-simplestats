@@ -15,6 +15,13 @@ with open(os.path.expanduser('~/.config/simplestats/token')) as fp:
 logger = logging.getLogger(__name__)
 
 
+def pformat(msg, item):
+    sys.stdout.write(msg.format(**item))
+    if item.get('more'):
+        sys.stdout.write(' | href=' + item['more'])
+    sys.stdout.write('\n')
+
+
 def main():
     if 'BitBar' not in os.environ:
         logging.basicConfig(level=logging.DEBUG)
@@ -25,7 +32,7 @@ def main():
     print(u'---')
 
     response = requests.get('{}/countdown'.format(API), headers={
-        'User-Agent': 'simplestats-bitbar/' + __version__,
+        'User-Agent': 'bitbar-numbers/' + __version__,
         'Authorization': 'Token ' + TOKEN
     })
     response.raise_for_status()
@@ -39,17 +46,12 @@ def main():
     charts = response.json()
 
     for item in countdowns['results']:
-        if item.get('more'):
-            sys.stdout.write('{label} - {created} | href={more}\n'.format(**item))
-        else:
-            sys.stdout.write('{label} - {created}\n'.format(**item))
+        pformat('{label} - {created}', item)
     print(u'---')
     for item in charts['results']:
-        if item.get('more'):
-            sys.stdout.write('{label} - {value} ...| href={more}\n'.format(**item))
-        else:
-            sys.stdout.write('{label} - {value}\n'.format(**item))
+        pformat('{label} - {value}', item)
 
     print(u'---')
     print(u'Refresh | refresh=true')
     print(u'Api | href=' + API)
+    print(u'Issues | href=https://github.com/kfdm/bitbar-numbers/issues')
