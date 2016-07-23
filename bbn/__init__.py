@@ -39,7 +39,10 @@ def main():
     charts = response.json()
 
     for item in countdowns['results']:
-        sys.stdout.write('{label} - {created} | href={icon}\n'.format(**item))
+        if item.get('more'):
+            sys.stdout.write('{label} - {created} | href={more}\n'.format(**item))
+        else:
+            sys.stdout.write('{label} - {created}\n'.format(**item))
     print(u'---')
     for item in charts['results']:
         if item.get('more'):
@@ -49,3 +52,4 @@ def main():
 
     print(u'---')
     print(u'Refresh | refresh=true')
+    print(u'Api | href=' + API)
