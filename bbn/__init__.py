@@ -43,7 +43,7 @@ def main():
     else:
         sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf8')
 
-    print(u'bbn')
+    print(u':bar_chart:')
 
     print(u'---')
     get('{}/countdown'.format(API), '{label} - {created}', 'created')
@@ -52,7 +52,7 @@ def main():
     get('{}/chart'.format(API), '{label} - {value}', 'label')
 
     print(u'---')
-    print(u'Dev')
+    print(u':computer: Dev')
     print(u'-- Refresh | refresh=true')
     print(u'-- Api | href=' + API)
     print(u'-- Issues | href=https://github.com/kfdm/bitbar-numbers/issues')
