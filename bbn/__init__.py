@@ -46,7 +46,7 @@ def main():
     print(u':bar_chart:')
 
     print(u'---')
-    get('{}/countdown'.format(API), '{label} - {created}', 'created')
+    get('{}/countdown'.format(API), '{label} - {created} - {description}', 'created')
 
     print(u'---')
     get('{}/chart'.format(API), '{label} - {value}', 'label')
