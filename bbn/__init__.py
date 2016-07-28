@@ -22,14 +22,16 @@ def pformat(msg, item):
     sys.stdout.write('\n')
 
 
-def get(url, fmt):
+def get(url, fmt, sort_key='label'):
     try:
         response = requests.get(url, headers={
             'User-Agent': 'bitbar-numbers/' + __version__,
             'Authorization': 'Token ' + TOKEN
         })
         response.raise_for_status()
-        for item in response.json()['results']:
+        for item in sorted(
+                response.json()['results'],
+                key=lambda x: x[sort_key]):
             pformat(fmt, item)
     except (requests.HTTPError, requests.exceptions.ConnectionError) as e:
         sys.stdout.write('Error loading %s\n' % e)
@@ -44,10 +46,10 @@ def main():
     print(u'bbn')
 
     print(u'---')
-    get('{}/countdown'.format(API), '{label} - {created}')
+    get('{}/countdown'.format(API), '{label} - {created}', 'created')
 
     print(u'---')
-    get('{}/chart'.format(API), '{label} - {value}')
+    get('{}/chart'.format(API), '{label} - {value}', 'label')
 
     print(u'---')
     print(u'Dev')
