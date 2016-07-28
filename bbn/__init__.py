@@ -23,15 +23,15 @@ def pformat(msg, item):
 
 
 def get(url, fmt):
-    response = requests.get(url, headers={
-        'User-Agent': 'bitbar-numbers/' + __version__,
-        'Authorization': 'Token ' + TOKEN
-    })
     try:
+        response = requests.get(url, headers={
+            'User-Agent': 'bitbar-numbers/' + __version__,
+            'Authorization': 'Token ' + TOKEN
+        })
         response.raise_for_status()
         for item in response.json()['results']:
             pformat(fmt, item)
-    except requests.HTTPError as e:
+    except (requests.HTTPError, requests.exceptions.ConnectionError) as e:
         sys.stdout.write('Error loading %s\n' % e)
 
 
