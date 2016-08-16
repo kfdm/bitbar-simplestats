@@ -1,7 +1,7 @@
 import logging
 import os
 import sys
-
+import datetime
 import requests
 
 __version__ = '0.1'
@@ -32,6 +32,10 @@ def get(url, fmt, sort_key='label'):
         for item in sorted(
                 response.json()['results'],
                 key=lambda x: x[sort_key]):
+            # Convert to localtime
+            if 'created' in item:
+                utc_dt = datetime.datetime.strptime(item['created'], '%Y-%m-%dT%H:%M:%SZ')
+                item['created'] = utc_dt.replace(tzinfo=datetime.timezone.utc).astimezone(tz=None)
             pformat(fmt, item)
     except (requests.HTTPError, requests.exceptions.ConnectionError) as e:
         sys.stdout.write('Error loading %s\n' % e)
@@ -46,7 +50,7 @@ def main():
     print(u':bar_chart:')
 
     print(u'---')
-    get('{}/countdown'.format(API), '{label} - {created} - {description}', 'created')
+    get('{}/countdown'.format(API), '{label} - {created:%Y-%m-%d %H:%M} - {description}', 'created')
 
     print(u'---')
     get('{}/chart'.format(API), '{label} - {value}', 'label')
