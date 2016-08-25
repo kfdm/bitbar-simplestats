@@ -35,8 +35,17 @@ def get(url, fmt, sort_key='label'):
             # Convert to localtime
             if 'created' in item:
                 utc_dt = datetime.datetime.strptime(item['created'], '%Y-%m-%dT%H:%M:%SZ')
+                item['diff'] = utc_dt - datetime.datetime.now()
                 item['created'] = utc_dt.replace(tzinfo=datetime.timezone.utc).astimezone(tz=None)
             pformat(fmt, item)
+
+            # Alternate link with time difference
+            if sort_key == 'created':
+                sys.stdout.write('{label} - [{diff}] - {description} | alternate=true'.format(**item))
+                if item.get('more'):
+                    sys.stdout.write(' href=' + item['more'])
+                sys.stdout.write('\n')
+
     except (requests.HTTPError, requests.exceptions.ConnectionError) as e:
         sys.stdout.write('Error loading %s\n' % e)
 
