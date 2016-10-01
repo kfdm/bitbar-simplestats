@@ -35,7 +35,7 @@ def get(url, fmt, sort_key='label'):
             # Convert to localtime
             if 'created' in item:
                 utc_dt = datetime.datetime.strptime(item['created'], '%Y-%m-%dT%H:%M:%SZ')
-                item['diff'] = utc_dt - datetime.datetime.now()
+                item['diff'] = utc_dt - datetime.datetime.utcnow().replace(microsecond=0)
                 item['created'] = utc_dt.replace(tzinfo=datetime.timezone.utc).astimezone(tz=None)
             pformat(fmt, item)
 
