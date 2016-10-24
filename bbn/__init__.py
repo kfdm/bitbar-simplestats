@@ -3,16 +3,22 @@ import os
 import sys
 import datetime
 import requests
+import configparser
+
 
 __version__ = '0.1'
 
-with open(os.path.expanduser('~/.config/simplestats/api')) as fp:
-    API = fp.read().strip()
-with open(os.path.expanduser('~/.config/simplestats/token')) as fp:
-    TOKEN = fp.read().strip()
-
-
 logger = logging.getLogger(__name__)
+
+
+section = os.path.basename(sys.argv[0])
+
+config = configparser.ConfigParser(defaults={'icon': u':bar_chart:'})
+with open(os.path.expanduser('~/.config/simplestats/config.ini')) as fp:
+    config.read_file(fp)
+API = config.get(section, 'api')
+TOKEN = config.get(section, 'token')
+ICON = config.get(section, 'icon')
 
 
 def pformat(msg, item):
@@ -56,7 +62,7 @@ def main():
     else:
         sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf8')
 
-    print(u':bar_chart:')
+    print(ICON)
 
     print(u'---')
     get('{}/countdown'.format(API), '{label} - {created:%Y-%m-%d %H:%M} - {description}', 'created')
