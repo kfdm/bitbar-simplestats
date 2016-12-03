@@ -1,10 +1,10 @@
+import configparser
+import datetime
 import logging
 import os
 import sys
-import datetime
-import requests
-import configparser
 
+import requests
 
 __version__ = '0.1'
 
@@ -16,6 +16,7 @@ section = os.path.basename(sys.argv[0])
 config = configparser.ConfigParser(defaults={'icon': u':bar_chart:'})
 with open(os.path.expanduser('~/.config/simplestats/config.ini')) as fp:
     config.read_file(fp)
+
 API = config.get(section, 'api')
 TOKEN = config.get(section, 'token')
 ICON = config.get(section, 'icon')
@@ -56,6 +57,26 @@ def get(url, fmt, sort_key='label'):
         sys.stdout.write('Error loading %s\n' % e)
 
 
+def reports(url, fmt, sort_key):
+    TODAY = str(datetime.datetime.utcnow().date())
+    YESTERDAY = str((datetime.datetime.utcnow() - datetime.timedelta(days=1)).date())
+
+    try:
+        response = requests.get(url, headers={
+            'User-Agent': 'bitbar-numbers/' + __version__,
+            'Authorization': 'Token ' + TOKEN
+        })
+        response.raise_for_status()
+        for item in sorted(
+                response.json()['results'],
+                key=lambda x: x[sort_key]):
+            if item['date'] in [TODAY, YESTERDAY]:
+                item['more'] = None
+                pformat(fmt, item)
+    except (requests.HTTPError, requests.exceptions.ConnectionError) as e:
+        sys.stdout.write('Error loading %s\n' % e)
+
+
 def main():
     if 'BitBar' not in os.environ:
         logging.basicConfig(level=logging.DEBUG)
@@ -69,6 +90,9 @@ def main():
 
     print(u'---')
     get('{}/chart'.format(API), '{label} - {value}', 'label')
+
+    print(u'---')
+    reports('{}/report?ordering=-date'.format(API), '{name} - {date} | href={more}', 'date')
 
     print(u'---')
     print(u':computer: Dev')

@@ -8,7 +8,7 @@ setup(
     packages=['bbn'],
     entry_points={
         'console_scripts': [
-            'bbn = bbn:main'
+            'bbn = bitbar_numbers:main'
         ]
     }
 )
