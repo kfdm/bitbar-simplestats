@@ -21,6 +21,9 @@ API = config.get(section, 'api')
 TOKEN = config.get(section, 'token')
 ICON = config.get(section, 'icon')
 BASE = config.get(section, 'base')
+EXPIRED = config.getboolean(section, 'expired', fallback=True)
+
+NOW = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).astimezone(tz=None)
 
 
 def pformat(msg, item):
@@ -45,6 +48,10 @@ def get(url, fmt, sort_key='label'):
                 utc_dt = datetime.datetime.strptime(item['created'], '%Y-%m-%dT%H:%M:%SZ')
                 item['diff'] = utc_dt - datetime.datetime.utcnow().replace(microsecond=0)
                 item['created'] = utc_dt.replace(tzinfo=datetime.timezone.utc).astimezone(tz=None)
+
+                if not EXPIRED:
+                    if item['created'] < NOW:
+                        continue
             pformat(fmt, item)
 
             # Alternate link with time difference
