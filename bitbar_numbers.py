@@ -44,14 +44,13 @@ def get(url, fmt, sort_key='label'):
                 response.json()['results'],
                 key=lambda x: x[sort_key]):
             # Convert to localtime
-            if 'created' in item:
+            if sort_key == 'created':
                 utc_dt = datetime.datetime.strptime(item['created'], '%Y-%m-%dT%H:%M:%SZ')
                 item['diff'] = utc_dt - datetime.datetime.utcnow().replace(microsecond=0)
                 item['created'] = utc_dt.replace(tzinfo=datetime.timezone.utc).astimezone(tz=None)
 
-                if not EXPIRED:
-                    if item['created'] < NOW:
-                        continue
+                if not EXPIRED and item['created'] < NOW:
+                    continue
             pformat(fmt, item)
 
             # Alternate link with time difference
