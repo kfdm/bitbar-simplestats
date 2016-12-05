@@ -20,6 +20,7 @@ with open(os.path.expanduser('~/.config/simplestats/config.ini')) as fp:
 API = config.get(section, 'api')
 TOKEN = config.get(section, 'token')
 ICON = config.get(section, 'icon')
+BASE = config.get(section, 'base')
 
 
 def pformat(msg, item):
@@ -71,7 +72,7 @@ def reports(url, fmt, sort_key):
                 response.json()['results'],
                 key=lambda x: x[sort_key]):
             if item['date'] in [TODAY, YESTERDAY]:
-                item['more'] = None
+                item['more'] = BASE + item['url']
                 pformat(fmt, item)
     except (requests.HTTPError, requests.exceptions.ConnectionError) as e:
         sys.stdout.write('Error loading %s\n' % e)
@@ -92,7 +93,7 @@ def main():
     get('{}/chart'.format(API), '{label} - {value}', 'label')
 
     print(u'---')
-    reports('{}/report?ordering=-date'.format(API), '{name} - {date} | href={more}', 'date')
+    reports('{}/report?ordering=-date'.format(API), '{name} - {date}', 'date')
 
     print(u'---')
     print(u':computer: Dev')
