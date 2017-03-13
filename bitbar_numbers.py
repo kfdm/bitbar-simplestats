@@ -5,10 +5,12 @@ import os
 import sys
 
 import requests
+import pint
 
 __version__ = '0.1'
 
 logger = logging.getLogger(__name__)
+ureg = pint.UnitRegistry()
 
 
 section = os.path.basename(sys.argv[0])
@@ -51,6 +53,15 @@ def get(url, fmt, sort_key='label'):
 
                 if not EXPIRED and item['created'] < NOW:
                     continue
+            if 'unit' in item and item['unit']:
+                try:
+                    item['value'] = ureg.Quantity(item['value'], item['unit'])
+                    if item['value'].dimensionality == '[time]':
+                        item['value'] = datetime.timedelta(seconds=item['value'].to(ureg.second).magnitude)
+                    elif item['value'].dimensionality == '[temperature]':
+                        item['value'] = '{} C'.format(item['value'].to(ureg.degC).magnitude)
+                except pint.errors.UndefinedUnitError:
+                    pass
             pformat(fmt, item)
 
             # Alternate link with time difference
