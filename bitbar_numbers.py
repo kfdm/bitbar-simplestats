@@ -25,6 +25,13 @@ ICON = config.get(section, 'icon')
 BASE = config.get(section, 'base')
 EXPIRED = config.getboolean(section, 'expired', fallback=True)
 
+# https://mkaz.tech/code/python-string-format-cookbook/
+SIMPLE_FORMAT = {
+    'jpy': '{:.2f}円',
+    'percent': '{:.0%}',
+    'integer': '{:,.0f}',
+}
+
 NOW = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).astimezone(tz=None)
 
 
@@ -54,19 +61,17 @@ def get(url, fmt, sort_key='label'):
                 if not EXPIRED and item['created'] < NOW:
                     continue
             if 'unit' in item and item['unit']:
-                try:
-                    item['value'] = ureg.Quantity(item['value'], item['unit'])
-                    if item['value'].dimensionality == '[time]':
-                        item['value'] = datetime.timedelta(seconds=item['value'].to(ureg.second).magnitude)
-                    elif item['value'].dimensionality == '[temperature]':
-                        item['value'] = '{} C'.format(item['value'].to(ureg.degC).magnitude)
-                except pint.errors.UndefinedUnitError:
-                    if item['unit'].lower() == 'jpy':
-                        item['value'] = '{:.2f}円'.format(item['value'])
-                    elif item['unit'] == 'percent':
-                        item['value'] = '{:.2}'.format(item['value'])
-            elif 'value' in item:
-                item['value'] = '{:,}'.format(item['value'])
+                if item['unit'] in SIMPLE_FORMAT:
+                    item['value'] = SIMPLE_FORMAT[item['unit']].format(item['value'])
+                else:
+                    try:
+                        item['value'] = ureg.Quantity(item['value'], item['unit'])
+                        if item['value'].dimensionality == '[time]':
+                            item['value'] = datetime.timedelta(seconds=item['value'].to(ureg.second).magnitude)
+                        elif item['value'].dimensionality == '[temperature]':
+                            item['value'] = '{} C'.format(item['value'].to(ureg.degC).magnitude)
+                    except pint.errors.UndefinedUnitError:
+                        pass
             pformat(fmt, item)
 
             # Alternate link with time difference
