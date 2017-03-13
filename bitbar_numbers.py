@@ -61,7 +61,12 @@ def get(url, fmt, sort_key='label'):
                     elif item['value'].dimensionality == '[temperature]':
                         item['value'] = '{} C'.format(item['value'].to(ureg.degC).magnitude)
                 except pint.errors.UndefinedUnitError:
-                    pass
+                    if item['unit'].lower() == 'jpy':
+                        item['value'] = '{:.2f}円'.format(item['value'])
+                    elif item['unit'] == 'percent':
+                        item['value'] = '{:.2}'.format(item['value'])
+            elif 'value' in item:
+                item['value'] = '{:,}'.format(item['value'])
             pformat(fmt, item)
 
             # Alternate link with time difference
