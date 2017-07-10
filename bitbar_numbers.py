@@ -23,7 +23,7 @@ API = config.get(section, 'api')
 TOKEN = config.get(section, 'token')
 ICON = config.get(section, 'icon')
 BASE = config.get(section, 'base')
-EXPIRED = config.getboolean(section, 'expired', fallback=True)
+SHOW_EXPIRED = config.getboolean(section, 'expired', fallback=True)
 
 # https://mkaz.tech/code/python-string-format-cookbook/
 SIMPLE_FORMAT = {
@@ -58,7 +58,7 @@ def get(url, fmt, sort_key='label'):
                 item['diff'] = utc_dt - datetime.datetime.utcnow().replace(microsecond=0)
                 item['created'] = utc_dt.replace(tzinfo=datetime.timezone.utc).astimezone(tz=None)
 
-                if not EXPIRED and item['created'] < NOW:
+                if not SHOW_EXPIRED and item['created'] < NOW:
                     continue
             if 'unit' in item and item['unit']:
                 if item['unit'] in SIMPLE_FORMAT:
