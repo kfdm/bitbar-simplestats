@@ -78,9 +78,9 @@ def get(url, fmt, sort_key='label'):
             if sort_key == 'created':
                 if item['diff'].total_seconds() < 0:
                     item['diff'] = datetime.timedelta(seconds=item['diff'].total_seconds() * -1)
-                    sys.stdout.write('{label} - [{diff} ago] - {description} | alternate=true'.format(**item))
+                    sys.stdout.write('{label} - [{diff} ago] - {description} | color=red alternate=true'.format(**item))
                 else:
-                    sys.stdout.write('{label} - [{diff}] - {description} | alternate=true'.format(**item))
+                    sys.stdout.write('{label} - [{diff}] - {description} | color=blue alternate=true'.format(**item))
                 if item.get('more'):
                     sys.stdout.write(' href=' + item['more'])
                 sys.stdout.write('\n')
