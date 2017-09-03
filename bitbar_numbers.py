@@ -23,7 +23,7 @@ API = config.get(section, 'api')
 TOKEN = config.get(section, 'token')
 ICON = config.get(section, 'icon')
 BASE = config.get(section, 'base')
-SHOW_EXPIRED = config.getboolean(section, 'expired', fallback=True)
+EXPIRED = config.getboolean(section, 'expired', fallback=True)
 
 # https://mkaz.tech/code/python-string-format-cookbook/
 SIMPLE_FORMAT = {
@@ -33,80 +33,94 @@ SIMPLE_FORMAT = {
 }
 
 NOW = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).astimezone(tz=None)
+TODAY = str(datetime.datetime.utcnow().date())
+YESTERDAY = str((datetime.datetime.utcnow() - datetime.timedelta(days=1)).date())
 
 
-def pformat(msg, item):
-    sys.stdout.write(msg.format(**item))
-    if item.get('more'):
-        sys.stdout.write(' | href=' + item['more'])
-    sys.stdout.write('\n')
+class Widget(object):
+    def __init__(self, item):
+        if self.sort == 'created':
+            utc_dt = datetime.datetime.strptime(item['created'], '%Y-%m-%dT%H:%M:%SZ')
+            item['diff'] = utc_dt - datetime.datetime.utcnow().replace(microsecond=0)
+            item['created'] = utc_dt.replace(tzinfo=datetime.timezone.utc).astimezone(tz=None)
 
+        if 'unit' in item and item['unit']:
+            if item['unit'] in SIMPLE_FORMAT:
+                item['value'] = SIMPLE_FORMAT[item['unit']].format(item['value'])
+            else:
+                try:
+                    item['value'] = ureg.Quantity(item['value'], item['unit'])
+                    if item['value'].dimensionality == '[time]':
+                        item['value'] = datetime.timedelta(seconds=item['value'].to(ureg.second).magnitude)
+                    elif item['value'].dimensionality == '[temperature]':
+                        item['value'] = '{} C'.format(item['value'].to(ureg.degC).magnitude)
+                except pint.errors.UndefinedUnitError:
+                    pass
+        self.data = item
 
-def get(url, fmt, sort_key='label'):
-    try:
-        response = requests.get(url, headers={
-            'User-Agent': 'bitbar-numbers/' + __version__,
-            'Authorization': 'Token ' + TOKEN
-        })
-        response.raise_for_status()
-        for item in sorted(
-                response.json()['results'],
-                key=lambda x: x[sort_key]):
-            # Convert to localtime
-            if sort_key == 'created':
-                utc_dt = datetime.datetime.strptime(item['created'], '%Y-%m-%dT%H:%M:%SZ')
-                item['diff'] = utc_dt - datetime.datetime.utcnow().replace(microsecond=0)
-                item['created'] = utc_dt.replace(tzinfo=datetime.timezone.utc).astimezone(tz=None)
+    def __getitem__(self, key):
+        return self.data[key]
 
-                if not SHOW_EXPIRED and item['created'] < NOW:
+    @classmethod
+    def get(cls):
+        try:
+            response = requests.get(cls.url, headers={
+                'User-Agent': 'bitbar-numbers/' + __version__,
+                'Authorization': 'Token ' + TOKEN
+            })
+            response.raise_for_status()
+            for item in sorted(
+                    response.json()['results'], key=lambda x: x[cls.sort]):
+                w = cls(item)
+                if not EXPIRED and w['created'] < NOW:
                     continue
-            if 'unit' in item and item['unit']:
-                if item['unit'] in SIMPLE_FORMAT:
-                    item['value'] = SIMPLE_FORMAT[item['unit']].format(item['value'])
-                else:
-                    try:
-                        item['value'] = ureg.Quantity(item['value'], item['unit'])
-                        if item['value'].dimensionality == '[time]':
-                            item['value'] = datetime.timedelta(seconds=item['value'].to(ureg.second).magnitude)
-                        elif item['value'].dimensionality == '[temperature]':
-                            item['value'] = '{} C'.format(item['value'].to(ureg.degC).magnitude)
-                    except pint.errors.UndefinedUnitError:
-                        pass
-            pformat(fmt, item)
-
-            # Alternate link with time difference
-            if sort_key == 'created':
-                if item['diff'].total_seconds() < 0:
-                    item['diff'] = datetime.timedelta(seconds=item['diff'].total_seconds() * -1)
-                    sys.stdout.write('{label} - [{diff} ago] - {description} | color=red alternate=true'.format(**item))
-                else:
-                    sys.stdout.write('{label} - [{diff}] - {description} | color=blue alternate=true'.format(**item))
-                if item.get('more'):
-                    sys.stdout.write(' href=' + item['more'])
-                sys.stdout.write('\n')
-
-    except (requests.HTTPError, requests.exceptions.ConnectionError) as e:
-        sys.stdout.write('Error loading %s\n' % e)
+                for line in w.format():
+                    yield line
+        except (requests.HTTPError, requests.exceptions.ConnectionError) as e:
+            sys.stdout.write('Error loading %s\n' % e)
 
 
-def reports(url, fmt, sort_key):
-    TODAY = str(datetime.datetime.utcnow().date())
-    YESTERDAY = str((datetime.datetime.utcnow() - datetime.timedelta(days=1)).date())
+class Countdown(Widget):
+    sort = 'created'
+    url = '{}/countdown?limit=100'.format(API)
 
-    try:
-        response = requests.get(url, headers={
-            'User-Agent': 'bitbar-numbers/' + __version__,
-            'Authorization': 'Token ' + TOKEN
-        })
-        response.raise_for_status()
-        for item in sorted(
-                response.json()['results'],
-                key=lambda x: x[sort_key]):
-            if item['date'] in [TODAY, YESTERDAY]:
-                item['more'] = BASE + item['url']
-                pformat(fmt, item)
-    except (requests.HTTPError, requests.exceptions.ConnectionError) as e:
-        sys.stdout.write('Error loading %s\n' % e)
+    def format(self):
+        yield '{label} - {created:%Y-%m-%d %H:%M} - {description}'.format(**self.data)
+        if self.data.get('more'):
+            yield ' href=' + self.data['more']
+        yield '\n'
+
+        yield '{label} - [{diff}] - {description} | alternate=true'.format(**self.data)
+        if self.data.get('more'):
+            yield ' href=' + self.data['more']
+        yield '\n'
+
+
+class Chart(Widget):
+    sort = 'label'
+    url = '{}/chart?limit=100'.format(API)
+
+    def format(self):
+        yield '{label} - {value}'.format(**self.data)
+
+        if self.data.get('more'):
+            yield ' href=' + self.data['more']
+        yield '\n'
+
+
+class Report(Widget):
+    url = '{}/report?ordering=-date'.format(API)
+    sort = 'date'
+
+    def __init__(self, item):
+        self.data = item
+
+    def format(self):
+        if self.data['date'] in [TODAY, YESTERDAY]:
+            self.data['more'] = BASE + self.data['url']
+            yield '{name} - {date}'.format(**self.data)
+            yield '\n'
+
 
 
 def main():
@@ -118,13 +132,16 @@ def main():
     print(ICON)
 
     print(u'---')
-    get('{}/countdown'.format(API), '{label} - {created:%Y-%m-%d %H:%M} - {description}', 'created')
+    for entry in Countdown.get():
+        sys.stdout.write(entry)
 
     print(u'---')
-    get('{}/chart'.format(API), '{label} - {value}', 'label')
+    for entry in Chart.get():
+        sys.stdout.write(entry)
 
     print(u'---')
-    reports('{}/report?ordering=-date'.format(API), '{name} - {date}', 'date')
+    for entry in Report.get():
+        sys.stdout.write(entry)
 
     print(u'---')
     print(u':computer: Dev')
