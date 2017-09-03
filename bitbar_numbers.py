@@ -18,6 +18,10 @@ section = os.path.basename(sys.argv[0])
 config = configparser.ConfigParser(defaults={'icon': u':bar_chart:'})
 with open(os.path.expanduser('~/.config/simplestats/config.ini')) as fp:
     config.read_file(fp)
+if 'mute' not in config:
+    config.add_section('mute')
+if section not in config:
+    config.add_section(section)
 
 API = config.get(section, 'api')
 TOKEN = config.get(section, 'token')
@@ -74,6 +78,8 @@ class Widget(object):
                 w = cls(item)
                 if not EXPIRED and w['created'] < NOW:
                     continue
+                if 'id' in item and item['id'] in config['mute']:
+                    continue
                 for line in w.format():
                     yield line
         except (requests.HTTPError, requests.exceptions.ConnectionError) as e:
@@ -86,13 +92,13 @@ class Countdown(Widget):
 
     def format(self):
         yield '{label} - {created:%Y-%m-%d %H:%M} - {description}'.format(**self.data)
-        if self.data.get('more'):
-            yield ' href=' + self.data['more']
         yield '\n'
 
-        yield '{label} - [{diff}] - {description} | alternate=true'.format(**self.data)
         if self.data.get('more'):
-            yield ' href=' + self.data['more']
+            yield '-- More | href=' + self.data['more']
+            yield '\n'
+
+        yield '{label} - [{diff}] - {description} | alternate=true'.format(**self.data)
         yield '\n'
 
 
@@ -102,9 +108,18 @@ class Chart(Widget):
 
     def format(self):
         yield '{label} - {value}'.format(**self.data)
+        yield '\n'
 
         if self.data.get('more'):
-            yield ' href=' + self.data['more']
+            yield '-- More | href=' + self.data['more']
+            yield '\n'
+
+        yield '-- Mute'.format(**self.data)
+        yield ' | bash="'
+        yield sys.argv[0]
+        yield '" terminal=true'
+        yield ' param1=mute param2='
+        yield self.data['id']
         yield '\n'
 
 
@@ -122,12 +137,21 @@ class Report(Widget):
             yield '\n'
 
 
+def mute(pk):
+    config['mute'][pk] = 'muted'
+    with open(os.path.expanduser('~/.config/simplestats/config.ini'), 'w+') as fp:
+        print('Muting', pk)
+        config.write(fp)
+
 
 def main():
     if 'BitBar' not in os.environ:
         logging.basicConfig(level=logging.DEBUG)
     else:
         sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf8')
+
+    if 'mute' in sys.argv:
+        return mute(sys.argv[2])
 
     print(ICON)
 
