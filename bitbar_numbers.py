@@ -78,7 +78,7 @@ class Widget(object):
                 w = cls(item)
                 if not EXPIRED and w['created'] < NOW:
                     continue
-                if 'id' in item and item['id'] in config['mute']:
+                if 'id' in item and item['id'] in config[section]:
                     continue
                 for line in w.format():
                     yield line
@@ -92,11 +92,9 @@ class Countdown(Widget):
 
     def format(self):
         yield '{label} - {created:%Y-%m-%d %H:%M} - {description}'.format(**self.data)
-        yield '\n'
-
         if self.data.get('more'):
-            yield '-- More | href=' + self.data['more']
-            yield '\n'
+            yield ' | href=' + self.data['more']
+        yield '\n'
 
         yield '{label} - [{diff}] - {description} | alternate=true'.format(**self.data)
         yield '\n'
@@ -108,19 +106,21 @@ class Chart(Widget):
 
     def format(self):
         yield '{label} - {value}'.format(**self.data)
-        yield '\n'
-
         if self.data.get('more'):
-            yield '-- More | href=' + self.data['more']
-            yield '\n'
-
-        yield '-- Mute'.format(**self.data)
-        yield ' | bash="'
-        yield sys.argv[0]
-        yield '" terminal=true'
-        yield ' param1=mute param2='
-        yield self.data['id']
+            yield ' | href=' + self.data['more']
         yield '\n'
+
+        # if self.data.get('more'):
+        #     yield '-- More | href=' + self.data['more']
+        #     yield '\n'
+
+        # yield '-- Mute'.format(**self.data)
+        # yield ' | bash="'
+        # yield sys.argv[0]
+        # yield '" terminal=true'
+        # yield ' param1=mute param2='
+        # yield self.data['id']
+        # yield '\n'
 
 
 class Report(Widget):
