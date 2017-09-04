@@ -92,11 +92,14 @@ class Countdown(Widget):
 
     def format(self):
         yield '{label} - {created:%Y-%m-%d %H:%M} - {description}'.format(**self.data)
+        yield ' | color=red' if self.data['diff'].total_seconds() < 0 else ' | color=blue'
         if self.data.get('more'):
-            yield ' | href=' + self.data['more']
+            yield ' href=' + self.data['more']
+
         yield '\n'
 
         yield '{label} - [{diff}] - {description} | alternate=true'.format(**self.data)
+        yield ' color=red' if self.data['diff'].total_seconds() < 0 else ' | color=blue'
         yield '\n'
 
 
