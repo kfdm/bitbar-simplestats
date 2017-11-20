@@ -5,6 +5,8 @@ import os
 import sys
 
 import requests
+from dateutil.parser import parse
+
 import pint
 
 __version__ = '0.1'
@@ -36,7 +38,7 @@ SIMPLE_FORMAT = {
     'integer': '{:,.0f}',
 }
 
-NOW = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).astimezone(tz=None)
+NOW = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0)
 TODAY = str(datetime.datetime.utcnow().date())
 YESTERDAY = str((datetime.datetime.utcnow() - datetime.timedelta(days=1)).date())
 
@@ -44,9 +46,9 @@ YESTERDAY = str((datetime.datetime.utcnow() - datetime.timedelta(days=1)).date()
 class Widget(object):
     def __init__(self, item):
         if self.sort == 'created':
-            utc_dt = datetime.datetime.strptime(item['created'], '%Y-%m-%dT%H:%M:%SZ')
-            item['diff'] = utc_dt - datetime.datetime.utcnow().replace(microsecond=0)
-            item['created'] = utc_dt.replace(tzinfo=datetime.timezone.utc).astimezone(tz=None)
+            utc_dt = parse(item['created'])
+            item['diff'] = utc_dt - NOW
+            item['created'] = utc_dt.astimezone(tz=None)
 
         if 'unit' in item and item['unit']:
             if item['unit'] in SIMPLE_FORMAT:
