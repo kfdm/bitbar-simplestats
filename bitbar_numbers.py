@@ -45,10 +45,10 @@ YESTERDAY = str((datetime.datetime.utcnow() - datetime.timedelta(days=1)).date()
 
 class Widget(object):
     def __init__(self, item):
-        if self.sort == 'created':
-            utc_dt = parse(item['created'])
+        if self.sort == 'timestamp':
+            utc_dt = parse(item['timestamp'])
             item['diff'] = utc_dt - NOW
-            item['created'] = utc_dt.astimezone(tz=None)
+            item['timestamp'] = utc_dt.astimezone(tz=None)
 
         if 'unit' in item and item['unit']:
             if item['unit'] in SIMPLE_FORMAT:
@@ -80,8 +80,11 @@ class Widget(object):
                 w = cls(item)
                 if not EXPIRED and w['created'] < NOW:
                     continue
-                if 'id' in item and item['id'] in config[section]:
+                if 'slug' in item and item['slug'] in config[section]:
                     continue
+                if cls.type != item['type']:
+                    continue
+                logger.debug('{slug} = {title}'.format(**item))
                 for line in w.format():
                     yield line
         except (requests.HTTPError, requests.exceptions.ConnectionError) as e:
@@ -89,43 +92,34 @@ class Widget(object):
 
 
 class Countdown(Widget):
-    sort = 'created'
-    url = '{}/countdown?limit=100'.format(API)
+    type = 'countdown'
+    sort = 'timestamp'
+    url = '{}/widget?limit=100'.format(API)
 
     def format(self):
-        yield '{label} - {created:%Y-%m-%d %H:%M} - {description}'.format(**self.data)
+        print(self.data)
+        yield '{title} - {timestamp:%Y-%m-%d %H:%M} - {description}'.format(**self.data)
         yield ' | color=red' if self.data['diff'].total_seconds() < 0 else ' | color=blue'
         if self.data.get('more'):
             yield ' href=' + self.data['more']
 
         yield '\n'
 
-        yield '{label} - [{diff}] - {description} | alternate=true'.format(**self.data)
+        yield '{title} - [{diff}] - {description} | alternate=true'.format(**self.data)
         yield ' color=red' if self.data['diff'].total_seconds() < 0 else ' | color=blue'
         yield '\n'
 
 
 class Chart(Widget):
-    sort = 'label'
-    url = '{}/chart?limit=100'.format(API)
+    sort = 'title'
+    type = 'chart'
+    url = '{}/widget?limit=100'.format(API)
 
     def format(self):
-        yield '{label} - {value}'.format(**self.data)
+        yield '{title} - {value}'.format(**self.data)
         if self.data.get('more'):
             yield ' | href=' + self.data['more']
         yield '\n'
-
-        # if self.data.get('more'):
-        #     yield '-- More | href=' + self.data['more']
-        #     yield '\n'
-
-        # yield '-- Mute'.format(**self.data)
-        # yield ' | bash="'
-        # yield sys.argv[0]
-        # yield '" terminal=true'
-        # yield ' param1=mute param2='
-        # yield self.data['id']
-        # yield '\n'
 
 
 class Report(Widget):
@@ -168,9 +162,9 @@ def main():
     for entry in Chart.get():
         sys.stdout.write(entry)
 
-    print(u'---')
-    for entry in Report.get():
-        sys.stdout.write(entry)
+    # print(u'---')
+    # for entry in Report.get():
+    #     sys.stdout.write(entry)
 
     print(u'---')
     print(u':computer: Dev')
