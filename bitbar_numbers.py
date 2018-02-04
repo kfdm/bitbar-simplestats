@@ -97,7 +97,6 @@ class Countdown(Widget):
     url = '{}/widget?limit=100'.format(API)
 
     def format(self):
-        print(self.data)
         yield '{title} - {timestamp:%Y-%m-%d %H:%M} - {description}'.format(**self.data)
         yield ' | color=red' if self.data['diff'].total_seconds() < 0 else ' | color=blue'
         if self.data.get('more'):
