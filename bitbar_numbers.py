@@ -80,7 +80,7 @@ class Widget(object):
                 w = cls(item)
                 if not EXPIRED and w['created'] < NOW:
                     continue
-                if 'slug' in item and item['slug'] in config[section]:
+                if 'bitbar.hide' in item.get('meta', {}):
                     continue
                 if cls.type != item['type']:
                     continue
