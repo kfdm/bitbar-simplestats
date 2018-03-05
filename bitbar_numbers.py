@@ -82,7 +82,7 @@ class Widget(object):
                     continue
                 if 'bitbar.hide' in item.get('meta', {}):
                     continue
-                if cls.type != item['type']:
+                if item['type'] not in cls.type:
                     continue
                 logger.debug('{slug} = {title}'.format(**item))
                 for line in w.format():
@@ -92,7 +92,7 @@ class Widget(object):
 
 
 class Countdown(Widget):
-    type = 'countdown'
+    type = ['countdown']
     sort = 'timestamp'
     url = '{}/widget?limit=100'.format(API)
 
@@ -111,7 +111,7 @@ class Countdown(Widget):
 
 class Chart(Widget):
     sort = 'title'
-    type = 'chart'
+    type = ['chart', 'location']
     url = '{}/widget?limit=100'.format(API)
 
     def format(self):
