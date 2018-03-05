@@ -125,20 +125,6 @@ class Chart(Widget):
         yield '\n'
 
 
-class Report(Widget):
-    url = '{}/report?ordering=-date'.format(API)
-    sort = 'date'
-
-    def __init__(self, item):
-        self.data = item
-
-    def format(self):
-        if self.data['date'] in [TODAY, YESTERDAY]:
-            self.data['more'] = BASE + self.data['url']
-            yield '{name} - {date}'.format(**self.data)
-            yield '\n'
-
-
 def mute(pk):
     config['mute'][pk] = 'muted'
     with open(os.path.expanduser('~/.config/simplestats/config.ini'), 'w+') as fp:
@@ -164,10 +150,6 @@ def main():
     print(u'---')
     for entry in Chart.get():
         sys.stdout.write(entry)
-
-    # print(u'---')
-    # for entry in Report.get():
-    #     sys.stdout.write(entry)
 
     print(u'---')
     print(u':computer: Dev')
