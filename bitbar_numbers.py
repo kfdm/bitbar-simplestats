@@ -97,13 +97,14 @@ class Countdown(Widget):
     url = '{}/widget?limit=100'.format(API)
 
     def format(self):
+        yield ':alarm_clock:'
         yield '{title} - {timestamp:%Y-%m-%d %H:%M} - {description} |'.format(**self.data)
         yield ' color=red' if self.data['diff'].total_seconds() < 0 else ' color=blue'
         if self.data.get('more'):
             yield ' href=' + self.data['more']
         yield '\n'
 
-        yield '{title} - [{diff}] - {description} | alternate=true'.format(**self.data)
+        yield ':alarm_clock: {title} - [{diff}] - {description} | alternate=true'.format(**self.data)
         yield ' color=red' if self.data['diff'].total_seconds() < 0 else ' color=blue'
         yield ' href={}/stats/{}'.format(BASE, self.data['slug'])
         yield '\n'
@@ -115,11 +116,13 @@ class Chart(Widget):
     url = '{}/widget?limit=100'.format(API)
 
     def format(self):
+        yield ':chart_with_upwards_trend:' if self.data['type'] == 'chart' else ':round_pushpin:'
         yield '{title} - {value}'.format(**self.data)
         if self.data.get('more'):
             yield ' | href=' + self.data['more']
         yield '\n'
 
+        yield ':chart_with_upwards_trend:' if self.data['type'] == 'chart' else ':round_pushpin:'
         yield '{title} - {value} | alternate=true'.format(**self.data)
         yield ' href={}/stats/{}'.format(BASE, self.data['slug'])
         yield '\n'
