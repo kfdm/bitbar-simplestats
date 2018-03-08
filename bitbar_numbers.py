@@ -50,12 +50,13 @@ class Widget(object):
             item['diff'] = utc_dt - NOW
             item['timestamp'] = utc_dt.astimezone(tz=None)
 
-        if 'unit' in item and item['unit']:
-            if item['unit'] in SIMPLE_FORMAT:
-                item['value'] = SIMPLE_FORMAT[item['unit']].format(item['value'])
+        if 'pint.unit' in item['meta']:
+            unit = item['meta']['pint.unit']
+            if unit in SIMPLE_FORMAT:
+                item['value'] = SIMPLE_FORMAT[unit].format(item['value'])
             else:
                 try:
-                    item['value'] = ureg.Quantity(item['value'], item['unit'])
+                    item['value'] = ureg.Quantity(item['value'], unit)
                     if item['value'].dimensionality == '[time]':
                         item['value'] = datetime.timedelta(seconds=item['value'].to(ureg.second).magnitude)
                     elif item['value'].dimensionality == '[temperature]':
@@ -77,10 +78,11 @@ class Widget(object):
             response.raise_for_status()
             for item in sorted(
                     response.json()['results'], key=lambda x: x[cls.sort]):
+                item.setdefault('meta', {})
                 w = cls(item)
                 if not EXPIRED and w['created'] < NOW:
                     continue
-                if 'bitbar.hide' in item.get('meta', {}):
+                if 'bitbar.hide' in item['meta']:
                     continue
                 if item['type'] not in cls.type:
                     continue
