@@ -47,7 +47,15 @@ class Widget(object):
     def __init__(self, item):
         if self.sort == 'timestamp':
             utc_dt = parse(item['timestamp'])
-            item['diff'] = utc_dt - NOW
+
+            # Python will show -1 day for negative timestamps which can be
+            # confusing so we store an absolute diff and then a highlight color
+            if utc_dt > NOW:
+                item['diff'] = utc_dt - NOW
+                item['highlight'] = 'blue'
+            else:
+                item['diff'] = NOW - utc_dt
+                item['highlight'] = 'red'
             item['timestamp'] = utc_dt.astimezone(tz=None)
 
         if 'pint.unit' in item['meta']:
@@ -100,14 +108,12 @@ class Countdown(Widget):
 
     def format(self):
         yield ':alarm_clock:'
-        yield '{title} - {timestamp:%Y-%m-%d %H:%M} - {description} |'.format(**self.data)
-        yield ' color=red' if self.data['diff'].total_seconds() < 0 else ' color=blue'
+        yield '{title} - {timestamp:%Y-%m-%d %H:%M} - {description} | color={highlight}'.format(**self.data)
         if self.data.get('more'):
             yield ' href=' + self.data['more']
         yield '\n'
 
-        yield ':alarm_clock: {title} - [{diff}] - {description} | alternate=true'.format(**self.data)
-        yield ' color=red' if self.data['diff'].total_seconds() < 0 else ' color=blue'
+        yield ':alarm_clock: {title} - [{diff}] - {description} | alternate=true color={highlight}'.format(**self.data)
         yield ' href={}/stats/{}'.format(BASE, self.data['slug'])
         yield '\n'
 
