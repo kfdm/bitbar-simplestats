@@ -120,18 +120,36 @@ class Countdown(Widget):
 
 class Chart(Widget):
     sort = 'title'
-    type = ['chart', 'location']
+    type = ['chart']
     url = '{}/widget?limit=100'.format(API)
 
     def format(self):
-        yield ':chart_with_upwards_trend:' if self.data['type'] == 'chart' else ':round_pushpin:'
+        yield ':chart_with_upwards_trend:'
         yield '{title} - {value}'.format(**self.data)
         if self.data.get('more'):
             yield ' | href=' + self.data['more']
         yield '\n'
 
-        yield ':chart_with_upwards_trend:' if self.data['type'] == 'chart' else ':round_pushpin:'
+        yield ':chart_with_upwards_trend:'
         yield '{title} - {value} | alternate=true'.format(**self.data)
+        yield ' href={}/stats/{}'.format(BASE, self.data['slug'])
+        yield '\n'
+
+
+class Location(Widget):
+    sort = 'timestamp'
+    type = ['location']
+    url = '{}/widget?limit=100'.format(API)
+
+    def format(self):
+        yield ':round_pushpin:'
+        yield '{title} - {timestamp:%Y-%m-%d %H:%M} - {description} | color={highlight}'.format(**self.data)
+        if self.data.get('more'):
+            yield ' | href=' + self.data['more']
+        yield '\n'
+
+        yield ':round_pushpin:'
+        yield '{title} - [{diff}] - {description} | alternate=true color={highlight}'.format(**self.data)
         yield ' href={}/stats/{}'.format(BASE, self.data['slug'])
         yield '\n'
 
@@ -156,6 +174,10 @@ def main():
 
     print(u'---')
     for entry in Countdown.get():
+        sys.stdout.write(entry)
+
+    print(u'---')
+    for entry in Location.get():
         sys.stdout.write(entry)
 
     print(u'---')
