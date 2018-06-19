@@ -20,8 +20,6 @@ section = os.path.basename(sys.argv[0])
 config = configparser.ConfigParser(defaults={'icon': u':bar_chart:'})
 with open(os.path.expanduser('~/.config/simplestats/config.ini')) as fp:
     config.read_file(fp)
-if 'mute' not in config:
-    config.add_section('mute')
 if section not in config:
     config.add_section(section)
 
@@ -154,21 +152,11 @@ class Location(Widget):
         yield '\n'
 
 
-def mute(pk):
-    config['mute'][pk] = 'muted'
-    with open(os.path.expanduser('~/.config/simplestats/config.ini'), 'w+') as fp:
-        print('Muting', pk)
-        config.write(fp)
-
-
 def main():
     if 'BitBar' not in os.environ:
         logging.basicConfig(level=logging.DEBUG)
     else:
         sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf8')
-
-    if 'mute' in sys.argv:
-        return mute(sys.argv[2])
 
     print(ICON)
 
