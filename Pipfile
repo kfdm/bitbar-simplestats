@@ -1,0 +1,13 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+numbers = {editable = true, path = "."}
+bitbarnumbers = {editable = true, path = "."}
+
+[dev-packages]
+
+[requires]
+python_version = "3.6"

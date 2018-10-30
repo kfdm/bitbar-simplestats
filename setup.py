@@ -2,10 +2,10 @@
 from setuptools import setup
 
 setup(
-    name='BitBar Numbers',
+    name='BitBarNumbers',
     author='Paul Traylor',
     url='http://github.com/kfdm/bitbar-numbers/',
-    packages=['bbn'],
+    module=['bitbar_numbers'],
     install_requires=[
         'Pint',
         'python-dateutil',
