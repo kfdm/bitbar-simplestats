@@ -29,7 +29,7 @@ ICON = config.get(section, 'icon')
 BASE = config.get(section, 'base')
 EXPIRED = config.getboolean(section, 'expired', fallback=True)
 
-# https://mkaz.tech/code/python-string-format-cookbook/
+# https://mkaz.blog/code/python-string-format-cookbook/
 SIMPLE_FORMAT = {
     'jpy': '{:.2f}円',
     'percent': '{:.0%}',
